@@ -2,3 +2,4 @@
 *.json
 *.pkl
 **/__pycache__
+*.gz

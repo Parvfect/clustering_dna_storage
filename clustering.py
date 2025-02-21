@@ -163,7 +163,7 @@ class Clustering:
             print(f"Found {found}")
             return False
         
-    def run_pipeline(self, fsm=False):
+    def run_pipeline(self, fsm=False, fix_orientation=True):
 
         print("Filtering strands by length")
         self.filter_by_length(ids=True)
@@ -175,7 +175,7 @@ class Clustering:
         self.cluster_strand_pool()
 
         print(f"Generating {self.n_reference_strands + 50} candidates")
-        self.generate_candidates(n_candidates=self.n_reference_strands + 50)
+        self.generate_candidates(n_candidates=self.n_reference_strands + 50, fix_orientation=fix_orientation)
 
         print("Evaluating candidates")
         self.evaluate_candidates(candidates=self.candidates, hist=True)

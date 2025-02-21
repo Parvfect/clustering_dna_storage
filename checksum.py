@@ -3,6 +3,7 @@ from typing import List, Tuple
 from math import floor
 from utils import reverse_complement
 from strand_reconstruction import make_prediction
+from tqdm import tqdm
 
 
 class CheckSum4():
@@ -65,19 +66,19 @@ class CheckSum4():
 
     def decode(
             self, candidates: List[str], n_reference_strands: int,
-            clustered_seqs: List[List[str]], n_guesses: int) -> List[str]:
+            clustered_seqs: List[List[str]], n_guesses: int, guesses: bool = False) -> List[str]:
         
         decoded_strands = set()
         n_reversed = 0
-        for ind, candidate in enumerate(candidates):
+        for ind, candidate in tqdm(enumerate(candidates), total=len(candidates)):
             
             rev_candidate = reverse_complement(candidate)
             
             if self.verify_checksum(candidate):
-                decoded_strands.add(candidate)
+                decoded_strands.add(candidate[:-4])
                 continue
             if self.verify_checksum(rev_candidate):
-                decoded_strands.add(rev_candidate)
+                decoded_strands.add(rev_candidate[:-4])
                 n_reversed += 1
                 continue
 
@@ -87,11 +88,11 @@ class CheckSum4():
                 
                 # Maybe some flag to check how many reverse oriented are corrected
                 if decoded:
-                    decoded_strands.add(candidate)
+                    decoded_strands.add(candidate[:-4])
                     if reversed:
                         n_reversed += 1
 
-            decoded_strands = list(decoded_strands)
-            print(f"{n_reversed / len(decoded_strands)} were reversed")
+        decoded_strands = list(decoded_strands)
+        print(f"{n_reversed / len(decoded_strands)} were reversed")
 
         return decoded_strands
