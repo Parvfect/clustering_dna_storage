@@ -25,10 +25,11 @@ class Clustering:
         self.distance_threshold = distance_threshold
 
     def filter_by_length(
-            self, max_length:int = 250, min_length: int = 190, ids: bool = False) -> List[str]:
+            self, max_length:int = 50, min_length: int = 5, ids: bool = False) -> List[str]:
 
         filtered_indices = [ind for ind in range(self.n_strands_pool) if len(
-            self.strand_pool[ind]) < max_length and len(self.strand_pool[ind]) > min_length]
+            self.strand_pool[ind]) < self.reference_length + max_length and len(
+                self.strand_pool[ind]) > self.reference_length - min_length]
                 
         strand_pool = [self.strand_pool[ind] for ind in filtered_indices]
         self.strand_pool = strand_pool
@@ -85,7 +86,7 @@ class Clustering:
     
     def generate_candidates(
             self, n_candidates: int, n_samples: int = 15, clustered_seqs: List[List[str]] = None,
-            fix_orientation=True) -> List[str]:
+            fix_orientation=False) -> List[str]:
 
         if clustered_seqs:  
             clustered_seqs = clustered_seqs[:n_candidates]
@@ -144,7 +145,9 @@ class Clustering:
         return self.evaluation_dict
     
     def fsm(self, candidates: List[str] = None, hard = False) -> bool:
-        assert len(candidates) == self.n_reference_strands
+        
+        if hard:
+            assert len(candidates) == self.n_reference_strands
         
         found = 0
         for i in self.original_strands:
@@ -152,7 +155,7 @@ class Clustering:
                 found += 1
                 continue
         
-        if found == self.n:
+        if found == self.n_reference_strands:
             print("Found all")
             return True
 
@@ -163,7 +166,7 @@ class Clustering:
             print(f"Found {found}")
             return False
         
-    def run_pipeline(self, fsm=False, fix_orientation=True):
+    def run_pipeline(self, fsm=False, fix_orientation=False):
 
         print("Filtering strands by length")
         self.filter_by_length(ids=True)

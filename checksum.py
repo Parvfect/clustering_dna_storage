@@ -8,16 +8,13 @@ from tqdm import tqdm
 
 class CheckSum4():
 
-    def __init__(self):
+    def __init__(self, reference_length: int):
+        self.reference_length = reference_length
         self.base_maps = {"A": 0, "C": 1, "G": 2, "T": 3}
         self.number_maps = ["A", "C", "G", "T"]
 
     def get_quaternary_sum(self, seq: str) -> int:
-        sum = 0
-        for base in seq:
-            sum += self.base_maps[base]
-
-        return sum % 256
+        return sum([self.base_maps[base] + 1 for base in seq]) % 256
 
     def encode_to_quaternary(self, num: int) -> str:
         seq = ""
@@ -51,7 +48,7 @@ class CheckSum4():
             self, cluster: List[str], n_guesses: int) -> Tuple[str, bool, bool]:
         
         for i in range(n_guesses):
-            candidate = make_prediction(cluster, sample_size=15)
+            candidate = make_prediction(cluster, sample_size=10)
             rev_candidate = reverse_complement(candidate)
 
             if self.verify_checksum(candidate):
@@ -62,37 +59,47 @@ class CheckSum4():
     
     def verify_checksum(self, candidate: str):
         return self.decode_quateranary(
-            candidate[-4:]) == self.get_quaternary_sum(candidate[:-4])
+            candidate[-4:]) == self.get_quaternary_sum(
+                candidate[:-4]) and len(candidate) == self.reference_length + 4
 
     def decode(
             self, candidates: List[str], n_reference_strands: int,
-            clustered_seqs: List[List[str]], n_guesses: int, guesses: bool = False) -> List[str]:
+            clustered_seqs: List[List[str]], n_guesses: int,
+            guesses: bool = False) ->  List[str]:
         
         decoded_strands = set()
         n_reversed = 0
+        found_indices = []
         for ind, candidate in tqdm(enumerate(candidates), total=len(candidates)):
             
             rev_candidate = reverse_complement(candidate)
-            
             if self.verify_checksum(candidate):
                 decoded_strands.add(candidate[:-4])
+                found_indices.append(ind)
                 continue
-            if self.verify_checksum(rev_candidate):
+            elif self.verify_checksum(rev_candidate):
                 decoded_strands.add(rev_candidate[:-4])
                 n_reversed += 1
+                found_indices.append(ind)
                 continue
+        
+        print(f"{len(found_indices)} direct checksum matches found")
+        guess_indices = [i for i in range(len(candidates)) if i not in found_indices]
 
-            else:
+        if guesses:
+            print("Making guesses")
+            for ind in tqdm(guess_indices):
+                candidate = candidates[ind]
                 candidate, decoded, reversed = self.make_checksum_guesses_from_cluster(
-                    cluster=clustered_seqs[ind], n_guesses=n_guesses)
-                
-                # Maybe some flag to check how many reverse oriented are corrected
+                    cluster=clustered_seqs[ind], n_guesses=n_guesses)        
                 if decoded:
                     decoded_strands.add(candidate[:-4])
                     if reversed:
                         n_reversed += 1
 
         decoded_strands = list(decoded_strands)
+        print(f"{len(decoded_strands)  - len(found_indices)} extra found after guessing")
         print(f"{n_reversed / len(decoded_strands)} were reversed")
+        print(f"{len(decoded_strands)} Valid checksum strands found")
 
         return decoded_strands

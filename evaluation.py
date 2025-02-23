@@ -44,7 +44,7 @@ def evaluate_candidates(original_strands: list[str], candidates: list[str],
 
     assert metric == 'edit_distance_ratio' or metric == 'identity'
 
-    reference_strand_indices = np.zeros(len(candidates))
+    reference_strand_indices = np.zeros(len(candidates), dtype=int)
     recovery_rates = np.zeros(len(candidates))
     reference_recoveries = np.zeros(len(original_strands))
 
@@ -57,21 +57,22 @@ def evaluate_candidates(original_strands: list[str], candidates: list[str],
             reference_recoveries[original_strand_index] = 1.0
             continue
         
-        best_recovery = 0.0
-        best_matching_index = 0
-        for ind_, original_strand in enumerate(original_strands):
-            
-            if metric == 'edit_distance_ratio':
-                recovery = ratio(original_strand, candidate)
-            elif metric == 'identity':
-                recovery = get_recovery_rate(candidate, original_strand)
+        else:
+            best_recovery = 0.0
+            best_matching_index = 0
+            for ind_, original_strand in enumerate(original_strands):
+                
+                if metric == 'edit_distance_ratio':
+                    recovery = ratio(original_strand, candidate)
+                elif metric == 'identity':
+                    recovery = get_recovery_rate(candidate, original_strand)
 
-            if recovery > best_recovery:                 
-                best_recovery, best_matching_index = recovery, ind_                                          
+                if recovery > best_recovery:                 
+                    best_recovery, best_matching_index = recovery, ind_                                          
 
-        reference_strand_indices[ind] = best_matching_index
-        reference_recoveries[best_matching_index] = best_recovery
-        recovery_rates[ind] = best_recovery
+            reference_strand_indices[ind] = best_matching_index
+            reference_recoveries[best_matching_index] = best_recovery
+            recovery_rates[ind] = best_recovery
 
     return {
         'reference_recoveries': reference_recoveries,
