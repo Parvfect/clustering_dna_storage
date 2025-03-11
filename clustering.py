@@ -13,7 +13,8 @@ class Clustering:
 
     def __init__(
             self, strand_pool: List[str], reference_length: int, original_strands: List[str] = None,
-            strand_pool_ids: List[str] = None, original_strand_ids: List[str] = None, distance_threshold: int = 40):
+            strand_pool_ids: List[str] = None, original_strand_ids: List[str] = None, distance_threshold: int = 40,
+            front_adapter: str = "AATGTACTTCGTTCAGTTACGTATTGCT", reverse_adapter=None):
 
         self.strand_pool = strand_pool
         self.n_strands_pool = len(strand_pool)
@@ -23,6 +24,8 @@ class Clustering:
         self.strand_pool_ids = strand_pool_ids
         self.original_strands_ids = original_strand_ids
         self.distance_threshold = distance_threshold
+        self.front_adapter = front_adapter
+        self.reverse_adapter = reverse_adapter
 
     def filter_by_length(
             self, max_length:int = 50, min_length: int = 5, ids: bool = False) -> List[str]:
@@ -46,11 +49,18 @@ class Clustering:
         
         return self.strand_pool
     
-    def remove_adapters(self, overwrite: bool = True) -> Tuple[List[str], List[str]]:
+    def remove_adapters(
+            self, front_adapter: str = "AATGTACTTCGTTCAGTTACGTATTGCT",
+            reverse_adapter: str = None,
+            overwrite: bool = True) -> Tuple[List[str], List[str]]:
 
         strand_pool, strand_pool_ids = remove_adapters_from_strands(
             strands=self.strand_pool, original_strand_length=self.reference_length,
-            ids=self.strand_pool_ids)
+            ids=self.strand_pool_ids, starting_adapter=front_adapter)
+        
+        strand_pool, strand_pool_ids = remove_adapters_from_strands(
+            strands=strand_pool, original_strand_length=self.reference_length,
+            ids=strand_pool_ids, starting_adapter=reverse_adapter)
         
         if overwrite:
             self.strand_pool, self.strand_pool_ids = strand_pool, strand_pool_ids
@@ -166,13 +176,16 @@ class Clustering:
             print(f"Found {found}")
             return False
         
-    def run_pipeline(self, fsm=False, fix_orientation=False):
+    def run_pipeline(
+            self, fsm: bool = False, fix_orientation: bool = False,
+            remove_adapters: bool = False):
 
         print("Filtering strands by length")
         self.filter_by_length(ids=True)
 
-        print("Removing adapters")
-        self.remove_adapters()
+        if remove_adapters:
+            print("Removing adapters")
+            self.remove_adapters(front_adapter=self.front_adapter, reverse_adapter=self.reverse_adapter)
 
         print("Clustering strands")
         self.cluster_strand_pool()

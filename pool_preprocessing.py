@@ -41,7 +41,7 @@ def remove_adapters_from_strands(strands, original_strand_length, ids=None,
         strand = strands[ind]
         overhang = len(strand) - original_strand_length
 
-        if overhang > len(starting_adapter)*2:
+        if overhang > len(starting_adapter)*2 + 15:
             continue
 
         if overhang > 5:
