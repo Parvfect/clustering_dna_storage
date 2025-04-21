@@ -12,15 +12,18 @@ import matplotlib.pyplot as plt
 class Clustering:
 
     def __init__(
-            self, strand_pool: List[str], reference_length: int, original_strands: List[str] = None,
-            strand_pool_ids: List[str] = None, original_strand_ids: List[str] = None, distance_threshold: int = 40,
-            front_adapter: str = "AATGTACTTCGTTCAGTTACGTATTGCT", reverse_adapter=None):
+            self, strand_pool: List[str], reference_length: int, original_strands: List[str] = [],
+            strand_pool_ids: List[str] = [], original_strand_ids: List[str] = None, distance_threshold: int = 40,
+            front_adapter: str = "AATGTACTTCGTTCAGTTACGTATTGCT", reverse_adapter=None, n_reference_strands: int = 0):
 
         self.strand_pool = strand_pool
         self.n_strands_pool = len(strand_pool)
         self.reference_length = reference_length
         self.original_strands = original_strands
-        self.n_reference_strands = len(self.original_strands)
+        if n_reference_strands == 0:
+            self.n_reference_strands = len(original_strands)
+        else:
+            self.n_reference_strands = n_reference_strands
         self.strand_pool_ids = strand_pool_ids
         self.original_strands_ids = original_strand_ids
         self.distance_threshold = distance_threshold
@@ -190,7 +193,7 @@ class Clustering:
         print("Clustering strands")
         self.cluster_strand_pool()
 
-        print(f"Generating {self.n_reference_strands + 50} candidates")
+        print(f"Generating {self.n_reference_strands + 200} candidates")
         self.generate_candidates(n_candidates=self.n_reference_strands + 50, fix_orientation=fix_orientation)
 
         print("Evaluating candidates")

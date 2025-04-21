@@ -52,5 +52,7 @@ def remove_adapters_from_strands(strands, original_strand_length, ids=None,
 
         if ids:
             cleaned_ids.append(ids[ind])
+
+    print(f"{1 - len(cleaned_strands) / len(strands)} strands removed")
         
     return cleaned_strands, cleaned_ids
