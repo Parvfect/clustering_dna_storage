@@ -67,3 +67,34 @@ def create_random_strand(strand_length: int) -> str:
     return "".join(
         [random.choice(['A', 'C', 'T', 'G']) for i in range(
             strand_length)])
+
+## Removing strand pool primers
+
+def remove_adapters_zero_error(strand_pool, strand_ids):
+    
+    front_adapter = 'CATGAAGTGGAGTAGCGGCG'
+    reverse_adapter = 'GCGACCGATGCTCACTGATC'
+
+    rev_front = reverse_complement(reverse_adapter)
+    rev_back = reverse_complement(front_adapter)
+
+    cleaned_strand_pool = []
+    cleaned_strand_ids = []
+
+    for ind, i in enumerate(strand_pool):
+        
+        if front_adapter in i[:20]:
+            if reverse_adapter in i[-21:]:
+                cleaned_strand = i[20: -21]
+                
+                if len(cleaned_strand) > 200 and len(cleaned_strand) < 230:
+                    cleaned_strand_pool.append(cleaned_strand)
+                    cleaned_strand_ids.append(strand_ids[ind])
+        if rev_front in i[:20]:
+            if rev_back in i[-21:]:
+                cleaned_strand = reverse_complement(i[20:-21])
+                if len(cleaned_strand) > 200 and len(cleaned_strand) < 230:
+                    cleaned_strand_pool.append(cleaned_strand)
+                    cleaned_strand_ids.append(strand_ids[ind])
+
+    return cleaned_strand_pool, cleaned_strand_ids

@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 def align(seqA: str, seqB: str, identity: bool = True) -> any:
     aligner = Align.PairwiseAligner()
-    aligner.mode = "local"
+    aligner.mode = "global"
     
     return aligner.align(seqA, seqB)[0]
 
