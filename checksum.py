@@ -102,4 +102,4 @@ class CheckSum4():
         print(f"{n_reversed / len(decoded_strands)} were reversed")
         print(f"{len(decoded_strands)} Valid checksum strands found")
 
-        return decoded_strands
+        return decoded_strands, found_indices
