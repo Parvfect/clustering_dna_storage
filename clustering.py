@@ -183,8 +183,8 @@ class Clustering:
             self, fsm: bool = False, fix_orientation: bool = False,
             remove_adapters: bool = False):
 
-        print("Filtering strands by length")
-        self.filter_by_length(ids=True)
+        #print("Filtering strands by length")
+        #self.filter_by_length(ids=True)
 
         if remove_adapters:
             print("Removing adapters")
@@ -193,11 +193,12 @@ class Clustering:
         print("Clustering strands")
         self.cluster_strand_pool()
 
-        print(f"Generating {self.n_reference_strands + 200} candidates")
-        self.generate_candidates(n_candidates=self.n_reference_strands + 50, fix_orientation=fix_orientation)
+        print(f"Generating {self.n_reference_strands + 100} candidates")
+        self.generate_candidates(n_candidates=self.n_reference_strands + 100, fix_orientation=fix_orientation)
 
-        print("Evaluating candidates")
-        self.evaluate_candidates(candidates=self.candidates, hist=True)
+        if self.original_strands:
+            print("Evaluating candidates")
+            self.evaluate_candidates(candidates=self.candidates, hist=True)
 
         if fsm:
             print(
