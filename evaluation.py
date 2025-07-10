@@ -4,6 +4,7 @@ from tqdm import tqdm
 from utils import reverse_complement
 import numpy as np
 from typing import Dict
+from difflib import SequenceMatcher
 
 
 def get_recovery_rate(consensus_strand: str, original_strand: str) -> float:
@@ -81,3 +82,20 @@ def evaluate_candidates(original_strands: list[str], candidates: list[str],
     }
 
     
+def get_prediction_errors(original, predicted):
+    sm = SequenceMatcher(None, original, predicted)
+    errors = [0] * len(predicted)  # Assume all bases are correct initially
+
+    for tag, i1, i2, j1, j2 in sm.get_opcodes():
+        if tag == 'equal':
+            continue
+        elif tag == 'replace':
+            for j in range(j1, j2):
+                errors[j] = 1
+        elif tag == 'insert':
+            for j in range(j1, j2):
+                errors[j] = 1
+        elif tag == 'delete':
+            pass
+
+    return errors
