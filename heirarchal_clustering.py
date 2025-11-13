@@ -89,7 +89,7 @@ def cluster_strands(strand_pool: List[str], distance_threshold: int = 40, use_ce
                 reversed_flag = True
                 break
 
-        if within_clusters:            
+        if within_clusters:
             clusters[cluster_ind].append(ind)
             
         if not within_clusters:
