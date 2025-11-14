@@ -7,13 +7,14 @@ from strand_reconstruction import make_prediction
 from tqdm import tqdm
 from utils import reverse_complement
 from crc_encoding import get_crc_strand
+from jpeg_strand_encoding import save_partially_decoded_jpeg
 
 def validate_crc(strand, info_length=1113):
-    return get_crc_strand(strand[:info_length]) == strand or get_crc_strand(strand[:info_length-1]) == strand
+    return get_crc_strand(strand[:info_length]) == strand
 
-original_strands = read_synthesized_strands_from_file('data/bird/bird_strands.fasta')[0]
+original_strands = read_synthesized_strands_from_file('bird_strands.fasta')[0]
 
-records = get_fastq_records(r'data\bird\reads.fastq')
+records = get_fastq_records(r'birding.fastq')
 strands = [str(i.seq) for i in records]
 ids = [i.id for i in records]
 strand_length = 1129
