@@ -26,7 +26,7 @@ def index_to_bases(idx: int, length: int = 8) -> str:
 
 
 def encode_strands(
-        dir, id_length, strand_length, fix_strand_ids=False,
+        dir, id_length, strand_length, fix_strand_ids=True,
         crc_encoding=False):
     """
     Encodes strands by adding XOR mask of 0101 and basic bit to dna conversion
@@ -38,8 +38,8 @@ def encode_strands(
     cfg_file = os.path.join(dir, "cfg.json")
 
     #input_file = "bird.jpg"
-    fasta_file = "bird_strands.fasta"
-    cfg_file = "cfg.json"
+    fasta_file = "data/final_run/bird_strands.fasta"
+    cfg_file = "data/final_run/cfg.json"
 
     with open(input_file, "rb") as f:
         data = np.frombuffer(f.read(), dtype=np.uint8)
@@ -116,7 +116,7 @@ def encode_strands(
 
 
 def save_partially_decoded_jpeg(
-        recovered_strands, total_bases, n_strands,
+        recovered_strands, n_strands,
         id_length, strand_ids, filename="decoded_partial.jpg",
         maintain_order=True, crc_encoding=True,
         padding=[0, 0, 0, 0, 0, 2]):
@@ -193,24 +193,26 @@ def save_partially_decoded_jpeg(
 
 # ==== PARAMETERS ====
 
-id_length = 20
-dir = os.path.join("data", "bird")
+if __name__ == '__main__':
 
-decoded_file = "data/bird/bird_decoded.jpg"
-cfg_file = "data/bird/cfg.json"
-xor_seed = '01001'
+    id_length = 20
+    dir = os.path.join("data", "bird")
 
-strand_length = 1093          # total bases per strand (including primer)
-primer_prefix = "ACGTACGTACGT" # 20nt primer (easy to read/recognize)
-crc_encoding=True
+    decoded_file = "data/bird/bird_decoded.jpg"
+    cfg_file = "data/bird/cfg.json"
+    xor_seed = '01001'
 
-strands, strand_ids, total_bases, n_strands, padding = encode_strands(
-    dir=dir, id_length=id_length,
-    strand_length=strand_length, crc_encoding=crc_encoding)
+    strand_length = 1093          # total bases per strand (including primer)
+    primer_prefix = "ACGTACGTACGT" # 20nt primer (easy to read/recognize)
+    crc_encoding=True
 
-for i in range(n_strands):
-    save_partially_decoded_jpeg(
-        recovered_strands=strands[:i+1], total_bases=total_bases,
-        n_strands=n_strands, id_length=id_length,
-        strand_ids=strand_ids, filename=f"decoded_partial_{i}.jpg",
-        crc_encoding=crc_encoding, padding=padding)
+    strands, strand_ids, total_bases, n_strands, padding = encode_strands(
+        dir=dir, id_length=id_length,
+        strand_length=strand_length, crc_encoding=crc_encoding)
+
+    for i in range(n_strands):
+        save_partially_decoded_jpeg(
+            recovered_strands=strands[:i+1], total_bases=total_bases,
+            n_strands=n_strands, id_length=id_length,
+            strand_ids=strand_ids, filename=f"decoded_partial_{i}.jpg",
+            crc_encoding=crc_encoding, padding=padding)

@@ -8,13 +8,14 @@ from tqdm import tqdm
 from utils import reverse_complement
 from crc_encoding import get_crc_strand
 from jpeg_strand_encoding import save_partially_decoded_jpeg
+import os
 
 def validate_crc(strand, info_length=1113):
     return get_crc_strand(strand[:info_length]) == strand
 
-original_strands = read_synthesized_strands_from_file('bird_strands.fasta')[0]
+original_strands = read_synthesized_strands_from_file('data/final_run/bird_strands.fasta')[0]
 
-records = get_fastq_records(r'birding.fastq')
+records = get_fastq_records(r'data/final_run/simulated.fastq')
 strands = [str(i.seq) for i in records]
 ids = [i.id for i in records]
 strand_length = 1129
@@ -53,6 +54,32 @@ def generate_candidates_crc_validated(
 
 validated_strands = generate_candidates_crc_validated(clustering_obj.clustered_seqs)
 
-no_crc_original_strands = [i[:-16] for i in original_strands]
-print(len(set(validated_strands).intersection(
-    original_strands)))
+no_crc_original_strands = [i[20:-16] for i in original_strands]
+t = [i[20:-16] for i in validated_strands]
+
+print(len(set(t).intersection(
+    no_crc_original_strands)))
+
+ids = ["CGTCTCGCGCCGGACCGAGC", "GGTAGGCCTGGCTAGTTGCT", "TTTGCGGCAGTGTCTGCGAT", "GGGCACAAATGGCTAGCCAC", "CGTCTTTGCCAAGGAGGTGT", "ACGACGCTGAGACAGAGATG"]
+
+id_length = 20
+
+# Build mapping from ID → strand (assuming one strand per ID)
+id_to_strand = {s[:id_length]: s for s in validated_strands}
+
+savepath = 'data/final_run'
+
+for k in range(len(ids)):
+    # recover strands whose IDs appear in ids[0:k+1], in that exact order
+    recovered_strands = [
+        id_to_strand[i] for i in ids[:k+1] if i in id_to_strand
+    ]
+
+    save_partially_decoded_jpeg(
+        recovered_strands=recovered_strands,
+        n_strands=6,
+        id_length=id_length,
+        strand_ids=ids,
+        filename=os.path.join(savepath, f"decoded_partial_{k}.jpg"),
+        crc_encoding=True
+    )
