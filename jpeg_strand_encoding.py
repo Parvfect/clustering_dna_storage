@@ -8,6 +8,7 @@ from itertools import cycle
 from datetime import datetime
 import json
 from crc_encoding import get_crc_strand
+from xor import get_valid_xor_seed_and_strand
 
 
 bits_to_base = {'00': 'A', '01': 'C', '10': 'G', '11': 'T'}
@@ -45,11 +46,11 @@ def encode_strands(
         data = np.frombuffer(f.read(), dtype=np.uint8)
 
     bitstream = ''.join(format(b, '08b') for b in data)
-    bitstream = add_xor_mask(bitstream)
+    #bitstream = add_xor_mask(bitstream)
 
     dna = ''.join(bits_to_base[bitstream[i:i+2]] for i in range(
         0, len(bitstream), 2))
-
+    
     payload_length = strand_length
     total_bases = len(dna)
     n_strands = math.ceil(total_bases / strand_length)
@@ -57,22 +58,30 @@ def encode_strands(
     # Adjust if too long for the payload section
     bases_per_strand = min(n_strands, payload_length)
     chunks = wrap(dna, strand_length)
+
+    new_strands = []
+    xor_seeds = []
+    for strand in chunks:
+        xor_strand, xor_seed, = get_valid_xor_seed_and_strand(strand)
+        new_strands.append(xor_strand)
+        xor_seeds.append(xor_seed)
     
     if fix_strand_ids:
+        strand_ids_ = [
+            "CGGACCGAGC", "GCTAGTTGCT", "TGTCTGCGAT",
+            "GGCTAGCCAC", "AAGGAGGTGT", "GACAGAGATG"]
         strand_ids = [
-            "CGTCTCGCGCCGGACCGAGC", "GGTAGGCCTGGCTAGTTGCT", "TTTGCGGCAGTGTCTGCGAT",
-            "GGGCACAAATGGCTAGCCAC", "CGTCTTTGCCAAGGAGGTGT", "ACGACGCTGAGACAGAGATG"]
+            xor_seeds[i] + strand_ids_[i] for i in range(len(xor_seeds))]
     else:
         strand_ids = [
         ''.join(random.choice(['A', 'C', 'T', 'G']) for _ in range(id_length))
         for _ in range(n_strands)
         ]
 
-
     # Add primers (truncate or pad as needed)
     strands = [
-        f"{strand_ids[i]}{chunk}" for i, chunk in enumerate(
-            chunks[:n_strands])]
+        f"{strand_ids[i]}{strand}" for i, strand in enumerate(
+            new_strands)]
     
     padding = np.zeros(n_strands)
     padded_strands = []
