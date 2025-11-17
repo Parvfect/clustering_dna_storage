@@ -8,7 +8,7 @@ from itertools import cycle
 from datetime import datetime
 import json
 from crc_encoding import get_crc_strand
-from xor import get_valid_xor_seed_and_strand
+from xor import get_valid_xor_seed_and_strand, get_bitstream_from_strand
 
 
 bits_to_base = {'00': 'A', '01': 'C', '10': 'G', '11': 'T'}
@@ -66,17 +66,7 @@ def encode_strands(
         new_strands.append(xor_strand)
         xor_seeds.append(xor_seed)
     
-    if fix_strand_ids:
-        strand_ids_ = [
-            "CGGACCGAGC", "GCTAGTTGCT", "TGTCTGCGAT",
-            "GGCTAGCCAC", "AAGGAGGTGT", "GACAGAGATG"]
-        strand_ids = [
-            xor_seeds[i] + strand_ids_[i] for i in range(len(xor_seeds))]
-    else:
-        strand_ids = [
-        ''.join(random.choice(['A', 'C', 'T', 'G']) for _ in range(id_length))
-        for _ in range(n_strands)
-        ]
+    strand_ids = xor_seeds
 
     # Add primers (truncate or pad as needed)
     strands = [
@@ -133,6 +123,7 @@ def save_partially_decoded_jpeg(
     # Remove primers and join payloads safely
     recovered_payloads = []
     strand_order = []
+    strand_ids = []
     for ind, s in enumerate(recovered_strands):
         if len(s) > id_length:
             recovered_strand = s[id_length:]
@@ -142,6 +133,7 @@ def save_partially_decoded_jpeg(
                 recovered_strand = recovered_strand[:-16]
             
             recovered_payloads.append(recovered_strand)
+            strand_ids.append(recovered_id)
 
             if recovered_id in strand_ids:
                 strand_order.append(strand_ids.index(recovered_id))
@@ -149,16 +141,21 @@ def save_partially_decoded_jpeg(
             print("Warning: strand too short, skipping:", s[:20], "…")
 
     # Sort recovered_strands by strand_order - reject if not strictly correct
+    """
     if sorted(strand_order) != list(np.arange(n_strands))[:len(recovered_payloads)]:
         print('Strands are in incorrect order! Decoding incomplete')
         return False
+    """
     
     if not recovered_payloads:
         raise ValueError("No valid strand payloads found")
     
-    recovered_payloads = np.array(recovered_payloads)[
-        np.argsort(strand_order)]
-    
+    if len(recovered_payloads) > 1:
+        indices = np.argsort(strand_order)
+        recovered_payloads = np.array(recovered_payloads)[
+            indices]
+        strand_ids = np.array(strand_ids)[indices]
+
     if padding is not None:
         recovered_payloads_ = []
 
@@ -177,11 +174,10 @@ def save_partially_decoded_jpeg(
 
     filtered_payload = ''.join(
         b for b in recovered_payload if b in base_to_bits)
-
-    recovered_bits = ''.join(
-        base_to_bits[b] for b in filtered_payload)
     
-    recovered_bits = add_xor_mask(recovered_bits)
+    recovered_bits = ''.join(
+        get_bitstream_from_strand(p, id) for p, id in zip(recovered_payloads, strand_ids)
+    )
 
     bit_len = len(recovered_bits) - (
         len(recovered_bits) % 8)
@@ -221,7 +217,7 @@ if __name__ == '__main__':
 
     for i in range(n_strands):
         save_partially_decoded_jpeg(
-            recovered_strands=strands[:i+1], total_bases=total_bases,
+            recovered_strands=strands[:i+1],
             n_strands=n_strands, id_length=id_length,
             strand_ids=strand_ids, filename=f"decoded_partial_{i}.jpg",
             crc_encoding=crc_encoding, padding=padding)

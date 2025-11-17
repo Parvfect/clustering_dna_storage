@@ -30,20 +30,16 @@ def check_obeys_dna_constraints(
         if nt == 'G' or nt == 'C':
             gc += 1
         
-        if run >= max_hp_length + 1:
-            return False
-        
-        
         if run >= max_hp_length:
-            violations += 1
+            return False
     
     gc_content = gc / len(strand)
 
     if gc_content > max_gc_content:
         return False
     
-    print(f"GC content is {gc_content}")
-    print(f"{violations} Violations")
+    #print(f"GC content is {gc_content}")
+    #print(f"{violations} Violations")
     
     return True
 
@@ -56,33 +52,49 @@ def generate_random_xor_seed(seed_length):
     return "".join([
         str(random.randint(0, 1)) for i in range(seed_length)])
 
-def get_valid_xor_seed_and_strand(strand, xor_seed_length=20):
-    bin_strand = convert_dna_to_binary_string(strand)
+def get_valid_xor_seed_and_strand(strand, xor_seed_length=10):
+    
     xor_seed_dna = ""
     final_strand = ""
-    while True:
-        xor_seed = generate_random_xor_seed(xor_seed_length)
-        xored_bin_string = add_xor_mask(bin_strand, xor_seed)
-        new_strand = convert_binary_string_to_dna(xored_bin_string)
-        if check_obeys_dna_constraints(new_strand):
-            final_strand = new_strand
-            xor_seed_dna = convert_binary_string_to_dna(xor_seed)
-            break
+    for i in range(4):
+        start = i * 300
+        end = (i + 1) * 300
+        if end > len(strand):
+            end = len(strand)
+        substrand = strand[start: end]
+        bin_strand = convert_dna_to_binary_string(
+            substrand)
+        while True:
+            xor_seed = generate_random_xor_seed(xor_seed_length)
+            xored_bin_string = add_xor_mask(bin_strand, xor_seed)
+            new_strand = convert_binary_string_to_dna(xored_bin_string)
+            if check_obeys_dna_constraints(new_strand):
+                final_strand += new_strand
+                xor_seed_dna += convert_binary_string_to_dna(xor_seed)
+                break
 
     return final_strand, xor_seed_dna
 
 
+def get_bitstream_from_strand(strand, xor_seed):
 
-for i in strands:
-    print(get_valid_xor_seed_and_strand(i))
+    fixed_bitstream = ""
+    
+    for i in range(4):
+        start = i * 300
+        end = (i + 1) * 300
+        if end > len(strand):
+            end = len(strand)
+        substrand = strand[start: end]
+        xor_seed_sub = xor_seed[5 * i : 5 * (i + 1)]
+        
+        bin_strand = convert_dna_to_binary_string(
+            substrand)
+        bin_xor_subseed = convert_dna_to_binary_string(xor_seed_sub)
 
+        t = add_xor_mask(bin_strand, bin_xor_subseed)
+        fixed_bitstream += add_xor_mask(bin_strand, bin_xor_subseed)
 
-
-
-
-
-
-
-
+    return fixed_bitstream
 
 
