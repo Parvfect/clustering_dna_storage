@@ -12,9 +12,7 @@ from xor import get_valid_xor_seed_and_strand, get_bitstream_from_strand
 
 
 bits_to_base = {'00': 'A', '01': 'C', '10': 'G', '11': 'T'}
-strand_ids = [
-        "CGTCTCGCGCCGGACCGAGC", "GGTAGGCCTGGCTAGTTGCT", "TTTGCGGCAGTGTCTGCGAT",
-        "GGGCACAAATGGCTAGCCAC", "CGTCTTTGCCAAGGAGGTGT", "ACGACGCTGAGACAGAGATG"]
+
 
 def add_xor_mask(bitstream, seed='01001'):
     return ''.join(
@@ -141,11 +139,10 @@ def save_partially_decoded_jpeg(
             print("Warning: strand too short, skipping:", s[:20], "…")
 
     # Sort recovered_strands by strand_order - reject if not strictly correct
-    """
+    
     if sorted(strand_order) != list(np.arange(n_strands))[:len(recovered_payloads)]:
         print('Strands are in incorrect order! Decoding incomplete')
         return False
-    """
     
     if not recovered_payloads:
         raise ValueError("No valid strand payloads found")
@@ -196,8 +193,6 @@ def save_partially_decoded_jpeg(
     return True  # Would like a more robust test here
 
 
-# ==== PARAMETERS ====
-
 if __name__ == '__main__':
 
     id_length = 20
@@ -211,6 +206,9 @@ if __name__ == '__main__':
     primer_prefix = "ACGTACGTACGT" # 20nt primer (easy to read/recognize)
     crc_encoding=True
 
+    # Not encoding anymore
+
+    """
     strands, strand_ids, total_bases, n_strands, padding = encode_strands(
         dir=dir, id_length=id_length,
         strand_length=strand_length, crc_encoding=crc_encoding)
@@ -221,3 +219,4 @@ if __name__ == '__main__':
             n_strands=n_strands, id_length=id_length,
             strand_ids=strand_ids, filename=f"decoded_partial_{i}.jpg",
             crc_encoding=crc_encoding, padding=padding)
+    """

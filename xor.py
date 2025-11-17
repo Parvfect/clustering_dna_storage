@@ -6,8 +6,6 @@ import random
 from utils import read_synthesized_strands_from_file
 from tqdm import tqdm
 
-strands = read_synthesized_strands_from_file(
-    'data/final_run/bird_strands.fasta')[0]
 
 def check_obeys_dna_constraints(
         strand, max_hp_length=4, max_gc_content=0.6):

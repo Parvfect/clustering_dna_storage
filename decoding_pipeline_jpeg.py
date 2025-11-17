@@ -15,7 +15,7 @@ def validate_crc(strand, info_length=1113):
 
 original_strands = read_synthesized_strands_from_file('data/final_run/bird_strands.fasta')[0]
 
-records = get_fastq_records(r'data/final_run/simulated.fastq')
+records = get_fastq_records(r'data/final_run/birding.fastq')
 strands = [str(i.seq) for i in records]
 ids = [i.id for i in records]
 strand_length = 1129
@@ -29,7 +29,7 @@ clustering_obj.run_pipeline(fix_orientation=True)
 
 
 def generate_candidates_crc_validated(
-        clustered_seqs, n_clusters=6, n_attempts=5,
+        clustered_seqs, n_clusters=15, n_attempts=5,
         strand_length=200, ma_sample_size=10):
     
     validated_strands = []
@@ -60,7 +60,7 @@ t = [i[20:-16] for i in validated_strands]
 print(len(set(t).intersection(
     no_crc_original_strands)))
 
-ids = ["CGTCTCGCGCCGGACCGAGC", "GGTAGGCCTGGCTAGTTGCT", "TTTGCGGCAGTGTCTGCGAT", "GGGCACAAATGGCTAGCCAC", "CGTCTTTGCCAAGGAGGTGT", "ACGACGCTGAGACAGAGATG"]
+ids = ["GGGATTTAGTGACATAATCG", "GGAGACGAGCCACGTGTCAT", "AAACGAGAAGGCCTTGCCCA", "TGAGGCAAGCTCCACCACGG", "CTCCCTCCCCGCAGCATATT", "CAGAGCTGAGTAGAGATCCA"]
 
 id_length = 20
 
