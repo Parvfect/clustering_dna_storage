@@ -25,22 +25,14 @@ def index_to_bases(idx: int, length: int = 8) -> str:
 
 
 def encode_strands(
-        dir, id_length, strand_length, fix_strand_ids=True,
+        input_file_jpeg, id_length, strand_length,fix_strand_ids=True,
         crc_encoding=False):
     """
     Encodes strands by adding XOR mask of 0101 and basic bit to dna conversion
     Splits to length such that its equally balanced
     """
 
-    input_file = os.path.join(dir, "bird.jpg")
-    fasta_file = os.path.join(dir, "bird_strands.fasta")
-    cfg_file = os.path.join(dir, "cfg.json")
-
-    #input_file = "bird.jpg"
-    fasta_file = "data/final_run/bird_strands.fasta"
-    cfg_file = "data/final_run/cfg.json"
-
-    with open(input_file, "rb") as f:
+    with open(input_file_jpeg, "rb") as f:
         data = np.frombuffer(f.read(), dtype=np.uint8)
 
     bitstream = ''.join(format(b, '08b') for b in data)
@@ -90,14 +82,17 @@ def encode_strands(
         strands = [
             get_crc_strand(strand) for strand in strands]
 
-    # ==== WRITE TO FASTA ====
+    # ==== WRITE TO FASTA  and config====
+    fasta_file = "bird_strands.fasta"
+    cfg_file = "cfg.json"
+
     with open(fasta_file, "w") as f:
         for i, strand in enumerate(strands):
             f.write(f">strand_{strand_ids[i]}\n{strand}\n")
 
     cfg_dict = {
         'date': str(datetime.today()),
-        'image_encoded': input_file,
+        'image_encoded': input_file_jpeg,
         'fasta_encoded': fasta_file,
         'XOR seed': xor_seed,
         'strand_ids': strand_ids,
@@ -201,22 +196,21 @@ if __name__ == '__main__':
     decoded_file = "data/bird/bird_decoded.jpg"
     cfg_file = "data/bird/cfg.json"
     xor_seed = '01001'
+    input_file_jpeg = 'data/bird/bird.jpg'
 
     strand_length = 1093          # total bases per strand (including primer)
     primer_prefix = "ACGTACGTACGT" # 20nt primer (easy to read/recognize)
     crc_encoding=True
 
     # Not encoding anymore
-
-    """
+    
     strands, strand_ids, total_bases, n_strands, padding = encode_strands(
-        dir=dir, id_length=id_length,
+        input_file_jpeg=input_file_jpeg, id_length=id_length,
         strand_length=strand_length, crc_encoding=crc_encoding)
-
+    
     for i in range(n_strands):
         save_partially_decoded_jpeg(
             recovered_strands=strands[:i+1],
             n_strands=n_strands, id_length=id_length,
             strand_ids=strand_ids, filename=f"decoded_partial_{i}.jpg",
             crc_encoding=crc_encoding, padding=padding)
-    """
